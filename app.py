@@ -111,7 +111,7 @@ html = f"""
     .qr-img {{ width:280px; height:280px; object-fit:contain; display:block; margin:0 auto 14px; image-rendering:pixelated; }}
     .name {{ font-size:18px; font-weight:700; margin-top:6px; word-break:break-word; }}
     .footer {{ text-align:center; padding:22px 24px 8px; }}
-    .footer img {{ width:90px; margin:0 auto; display:block; max-height:46px; object-fit:contain; }}
+    .footer img { width:135px; margin:0 auto; display:block; max-height:69px; object-fit:contain; }
     .mini-logo {{ font-size:24px; font-weight:800; color:#15152a; }}
     .love {{ margin-top:16px; font-size:16px; color:#15152a; font-weight:700; }}
 </style>
@@ -136,7 +136,6 @@ html = f"""
       </div>
       <div class='footer'>
         {logo_html}
-        <div class='love'>Do Porto com azul</div>
       </div>
     </div>
   </div>
@@ -153,7 +152,7 @@ with col1:
     st.write(f'**Tipo:** {tipo}')
     st.markdown(f"**Local:** [Pousada da Juventude de Ovar]({MAPS_URL})")
     st.write(f'**Data:** {data_evento}')
-    st.write('**Observação:** Bilhete pessoal e intransferivel')
+    st.write('**Observação:** Bilhete individual, pessoal e intransferível')
     st.info('O QR code usa o próprio nome digitado. Se os arquivos assets/capa_enf.png ou assets/logo_quinta.png não existirem, o app usa um fallback visual.')
 
 with col2:
@@ -163,6 +162,6 @@ with col2:
 st.download_button(
     'Baixar HTML do ingresso',
     data=html,
-    file_name='ingresso_forro.html',
+    file_name='Encontro_nacional_de_forrozeiros.html',
     mime='text/html'
 )
