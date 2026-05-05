@@ -125,7 +125,7 @@ html = f"""
             <a href='{MAPS_URL}' target='_blank' rel='noopener noreferrer'>Pousada da Juventude de Ovar</a>
           </div>
           <div class='date'>{data_evento}</div>
-          <div class='personal'>Bilhete pessoal e intransferivel</div>
+          <div class='personal'>Bilhete individual e intransferível</div>
         </div>
       </div>
       <div class='divider'></div>
