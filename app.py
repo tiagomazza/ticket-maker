@@ -1,171 +1,218 @@
-import datetime
-import random
+import base64
+from pathlib import Path
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import qrcode
 import streamlit as st
 
-st.set_page_config(
-    page_title="Sistema de Tickets",
-    page_icon="🎫",
-    layout="wide"
+st.set_page_config(page_title='Ingresso EuroFollia', page_icon='🎟️', layout='wide')
+
+ASSETS = Path(__file__).parent / 'assets'
+
+
+def img_to_base64(path: Path) -> str:
+    return base64.b64encode(path.read_bytes()).decode()
+
+
+def qr_to_base64(text: str) -> str:
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
+    qr.add_data(text)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color='black', back_color='white')
+    from io import BytesIO
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    return base64.b64encode(buffer.getvalue()).decode()
+
+
+banner_b64 = img_to_base64(ASSETS / 'banner.jpg')
+logo_b64 = img_to_base64(ASSETS / 'lebillet.png')
+
+st.sidebar.title('Configuração do ingresso')
+nome = st.sidebar.text_input('Nome no ingresso', value='NOME DO CLIENTE')
+tipo = st.sidebar.selectbox(
+    'Tipo de ingresso',
+    [
+        'Quaduplo sem casa de banho',
+        'Duplo sem casa de banho',
+        'Duplo com casa de banho',
+        'Day use',
+        'Festa unica',
+    ],
 )
+data_evento = st.sidebar.text_input('Data e hora', value='04/Jul/2026 - 12:00h')
+local_evento = st.sidebar.text_input('Local', value='Quinta Santo António')
+cidade = st.sidebar.text_input('Cidade', value='Porto - POR')
+evento = st.sidebar.text_input('Evento', value='EUROFOLLIA 2026 PORTO')
 
-st.title("🎫 Sistema de Tickets")
-st.caption("Abertura, acompanhamento e análise de chamados.")
+qr_b64 = qr_to_base64(nome)
 
-# Estado inicial
-if "tickets" not in st.session_state:
-    np.random.seed(42)
-    descricoes = [
-        "Erro ao acessar o sistema",
-        "Falha na impressão",
-        "Lentidão no computador",
-        "Problema de login",
-        "VPN não conecta",
-        "Sistema travando ao abrir",
-        "Erro no e-mail corporativo",
-        "Banco de dados indisponível",
-        "Permissão negada na pasta compartilhada",
-        "Atualização causando incompatibilidade",
-    ]
+html = f"""
+<style>
+    .page {{
+        background:#f4f4f4;
+        padding: 28px 0;
+        display:flex;
+        justify-content:center;
+    }}
+    .ticket {{
+        width: 420px;
+        background:white;
+        border-radius: 0;
+        overflow:hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        font-family: Arial, Helvetica, sans-serif;
+        color:#141414;
+    }}
+    .hero img {{
+        width:100%;
+        display:block;
+    }}
+    .body {{
+        padding: 14px 12px 24px;
+        background:white;
+    }}
+    .card {{
+        position:relative;
+        border:2px solid #e2e2e2;
+        border-radius: 12px;
+        background:#fff;
+        overflow:visible;
+    }}
+    .card:before, .card:after, .qr-card:before, .qr-card:after {{
+        content:'';
+        position:absolute;
+        width:38px;
+        height:38px;
+        background:#f4f4f4;
+        border:2px solid #e2e2e2;
+        border-radius:50%;
+    }}
+    .card:before {{ left:-22px; bottom:-22px; border-right:none; }}
+    .card:after {{ right:-22px; bottom:-22px; border-left:none; }}
+    .header-info {{
+        padding: 22px 30px 8px;
+    }}
+    .title {{
+        font-size:18px;
+        font-weight:800;
+        text-align:center;
+        letter-spacing:.3px;
+        margin-bottom:18px;
+    }}
+    .subtitle {{
+        font-size:21px;
+        font-weight:400;
+        margin-bottom:10px;
+    }}
+    .muted {{
+        font-size:14px;
+        color:#7f7f7f;
+        margin-bottom:8px;
+    }}
+    .date {{
+        font-size:18px;
+        font-weight:800;
+        margin-bottom:6px;
+    }}
+    .divider {{
+        border-top:2px dashed #d4d4d4;
+        margin: 0 24px;
+    }}
+    .qr-card {{
+        position:relative;
+        border:2px solid #e2e2e2;
+        border-top:none;
+        border-radius: 0 0 12px 12px;
+        margin-top:-2px;
+        padding: 34px 24px 30px;
+        text-align:center;
+        background:#fff;
+    }}
+    .qr-card:before {{ left:-22px; top:-22px; border-right:none; }}
+    .qr-card:after {{ right:-22px; top:-22px; border-left:none; }}
+    .ticket-type {{
+        font-size:17px;
+        font-weight:800;
+        margin-bottom:26px;
+    }}
+    .qr-img {{
+        width: 280px;
+        height: 280px;
+        object-fit: contain;
+        display:block;
+        margin: 0 auto 14px;
+        image-rendering: pixelated;
+    }}
+    .name {{
+        font-size:18px;
+        font-weight:800;
+        margin-top:6px;
+        word-break:break-word;
+    }}
+    .footer {{
+        text-align:center;
+        padding: 22px 0 8px;
+    }}
+    .footer img {{
+        width:74px;
+        margin:0 auto;
+        display:block;
+    }}
+    .hint {{
+        font-size:12px;
+        color:#6e6e6e;
+        text-align:center;
+        margin-top:14px;
+    }}
+</style>
+<div class='page'>
+    <div class='ticket'>
+        <div class='hero'><img src='data:image/jpeg;base64,{banner_b64}' alt='Banner do evento'></div>
+        <div class='body'>
+            <div class='card'>
+                <div class='header-info'>
+                    <div class='title'>{evento}</div>
+                    <div class='subtitle'>{local_evento}</div>
+                    <div class='muted'>{cidade}</div>
+                    <div class='date'>{data_evento}</div>
+                </div>
+            </div>
+            <div class='divider'></div>
+            <div class='qr-card'>
+                <div class='ticket-type'>{tipo}</div>
+                <img class='qr-img' src='data:image/png;base64,{qr_b64}' alt='QR Code do ingresso'>
+                <div class='name'>{nome}</div>
+            </div>
+            <div class='footer'>
+                <img src='data:image/png;base64,{logo_b64}' alt='LeBillet'>
+            </div>
+        </div>
+    </div>
+</div>
+"""
 
-    dados = {
-        "ID": [f"TICKET-{i}" for i in range(1100, 1050, -1)],
-        "Solicitante": np.random.choice(["Ana", "Bruno", "Carlos", "Diana", "Eduardo"], size=50),
-        "Categoria": np.random.choice(["Hardware", "Software", "Rede", "Acesso"], size=50),
-        "Descrição": np.random.choice(descricoes, size=50),
-        "Status": np.random.choice(["Aberto", "Em andamento", "Fechado"], size=50),
-        "Prioridade": np.random.choice(["Alta", "Média", "Baixa"], size=50),
-        "Data Abertura": [
-            datetime.date(2026, 1, 1) + datetime.timedelta(days=random.randint(0, 120))
-            for _ in range(50)
-        ],
-    }
-    st.session_state.tickets = pd.DataFrame(dados)
+st.title('Gerador de Ingresso EuroFollia')
+st.caption('Preencha os dados na barra lateral para personalizar o ingresso.')
 
-# Sidebar
-with st.sidebar:
-    st.header("Filtros")
-    filtro_status = st.multiselect(
-        "Status",
-        ["Aberto", "Em andamento", "Fechado"],
-        default=["Aberto", "Em andamento", "Fechado"]
-    )
-    filtro_prioridade = st.multiselect(
-        "Prioridade",
-        ["Alta", "Média", "Baixa"],
-        default=["Alta", "Média", "Baixa"]
-    )
+col1, col2 = st.columns([1.05, 1.25], gap='large')
 
-# Formulário
-st.subheader("Abrir novo ticket")
+with col1:
+    st.subheader('Dados atuais')
+    st.write(f'**Nome:** {nome}')
+    st.write(f'**Tipo:** {tipo}')
+    st.write(f'**Evento:** {evento}')
+    st.write(f'**Local:** {local_evento}')
+    st.write(f'**Cidade:** {cidade}')
+    st.write(f'**Data:** {data_evento}')
+    st.info('O QR code é gerado com o próprio nome informado no campo "Nome no ingresso".')
 
-with st.form("form_ticket", clear_on_submit=True):
-    col1, col2 = st.columns(2)
+with col2:
+    st.subheader('Pré-visualização')
+    st.components.v1.html(html, height=930, scrolling=False)
 
-    with col1:
-        solicitante = st.text_input("Solicitante")
-        categoria = st.selectbox("Categoria", ["Hardware", "Software", "Rede", "Acesso"])
-        prioridade = st.selectbox("Prioridade", ["Alta", "Média", "Baixa"])
-
-    with col2:
-        titulo = st.text_input("Título do problema")
-        descricao = st.text_area("Descrição detalhada", height=120)
-
-    enviar = st.form_submit_button("Criar ticket")
-
-if enviar:
-    if not solicitante or not titulo or not descricao:
-        st.error("Preencha Solicitante, Título e Descrição.")
-    else:
-        ultimo_id = st.session_state.tickets["ID"].str.replace("TICKET-", "", regex=False).astype(int).max()
-        novo_ticket = pd.DataFrame([{
-            "ID": f"TICKET-{ultimo_id + 1}",
-            "Solicitante": solicitante,
-            "Categoria": categoria,
-            "Descrição": f"{titulo} - {descricao}",
-            "Status": "Aberto",
-            "Prioridade": prioridade,
-            "Data Abertura": datetime.date.today()
-        }])
-
-        st.session_state.tickets = pd.concat([novo_ticket, st.session_state.tickets], ignore_index=True)
-        st.success("Ticket criado com sucesso.")
-        st.dataframe(novo_ticket, use_container_width=True, hide_index=True)
-
-# Filtros aplicados
-df = st.session_state.tickets[
-    st.session_state.tickets["Status"].isin(filtro_status)
-    & st.session_state.tickets["Prioridade"].isin(filtro_prioridade)
-].copy()
-
-# Métricas
-st.subheader("Indicadores")
-
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Total de tickets", len(df))
-c2.metric("Abertos", int((df["Status"] == "Aberto").sum()))
-c3.metric("Em andamento", int((df["Status"] == "Em andamento").sum()))
-c4.metric("Fechados", int((df["Status"] == "Fechado").sum()))
-
-# Tabela editável
-st.subheader("Tickets")
-
-df_editado = st.data_editor(
-    df,
-    use_container_width=True,
-    hide_index=True,
-    column_config={
-        "Status": st.column_config.SelectboxColumn(
-            "Status",
-            options=["Aberto", "Em andamento", "Fechado"],
-            required=True,
-        ),
-        "Prioridade": st.column_config.SelectboxColumn(
-            "Prioridade",
-            options=["Alta", "Média", "Baixa"],
-            required=True,
-        ),
-        "Data Abertura": st.column_config.DateColumn("Data Abertura", format="DD/MM/YYYY"),
-    },
-    disabled=["ID", "Data Abertura"],
+st.download_button(
+    'Baixar HTML do ingresso',
+    data=html,
+    file_name='ingresso_eurofollia.html',
+    mime='text/html'
 )
-
-# Atualiza estado principal
-st.session_state.tickets.update(df_editado)
-
-# Gráficos
-st.subheader("Análise")
-
-g1, g2 = st.columns(2)
-
-with g1:
-    st.markdown("#### Tickets por status")
-    graf_status = (
-        alt.Chart(df_editado)
-        .mark_bar(cornerRadiusTopLeft=6, cornerRadiusTopRight=6)
-        .encode(
-            x=alt.X("Status:N", sort=["Aberto", "Em andamento", "Fechado"]),
-            y="count():Q",
-            color=alt.Color("Status:N", legend=None),
-            tooltip=["Status:N", "count():Q"]
-        )
-        .properties(height=320)
-    )
-    st.altair_chart(graf_status, use_container_width=True)
-
-with g2:
-    st.markdown("#### Tickets por prioridade")
-    graf_prioridade = (
-        alt.Chart(df_editado)
-        .mark_arc(innerRadius=70)
-        .encode(
-            theta="count():Q",
-            color="Prioridade:N",
-            tooltip=["Prioridade:N", "count():Q"]
-        )
-        .properties(height=320)
-    )
-    st.altair_chart(graf_prioridade, use_container_width=True)
