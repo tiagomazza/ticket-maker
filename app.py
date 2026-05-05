@@ -111,7 +111,7 @@ html = f"""
     .qr-img {{ width:280px; height:280px; object-fit:contain; display:block; margin:0 auto 14px; image-rendering:pixelated; }}
     .name {{ font-size:18px; font-weight:700; margin-top:6px; word-break:break-word; }}
     .footer {{ text-align:center; padding:22px 24px 8px; }}
-    .footer img { width:135px; margin:0 auto; display:block; max-height:69px; object-fit:contain; }
+    .footer img {{ width:135px; margin:0 auto; display:block; max-height:69px; object-fit:contain; }}
     .mini-logo {{ font-size:24px; font-weight:800; color:#15152a; }}
     .love {{ margin-top:16px; font-size:16px; color:#15152a; font-weight:700; }}
 </style>
