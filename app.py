@@ -24,8 +24,8 @@ def qr_to_base64(text: str) -> str:
     return base64.b64encode(buffer.getvalue()).decode()
 
 
-banner_b64 = img_to_base64(ASSETS / 'banner.jpg')
-logo_b64 = img_to_base64(ASSETS / 'lebillet.png')
+banner_b64 = img_to_base64(ASSETS / 'capa_enf.png')
+logo_b64 = img_to_base64(ASSETS / 'logo_quinta.png')
 
 st.sidebar.title('Configuração do ingresso')
 nome = st.sidebar.text_input('Nome no ingresso', value='NOME DO CLIENTE')
